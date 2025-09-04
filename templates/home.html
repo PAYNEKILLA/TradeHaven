@@ -1,30 +1,200 @@
-<!-- templates/home.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trade Haven - Home</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trade Haven — Pi Test Payment</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      padding: 60px 20px;
-      background-color: #f0f8ff;
-      color: #222;
+    :root{
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --text:#1f174a;
+      --muted:#6b6f82;
+      --purple:#6f3cc3; /* Pi-ish purple */
+      --purple-600:#5b30a3;
+      --gold:#f5a623;   /* accent */
+      --ok:#14b8a6;
+      --err:#ef4444;
     }
-    h1 {
-      font-size: 2.5rem;
-      color: #6b46c1;
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
     }
-    p {
-      font-size: 1.2rem;
-      margin-top: 10px;
+    .wrap{max-width:920px; margin:0 auto; padding:24px}
+    .nav{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:8px 0;
     }
+    .brand{display:flex; align-items:center; gap:10px; font-weight:900}
+    .logo{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+      color:#fff;background:linear-gradient(180deg,var(--purple),#8f5cff)}
+    .tag{font-size:12px;background:rgba(245,166,35,.15); color:#7a5207;
+      padding:2px 8px;border-radius:999px}
+    .hero{
+      margin-top:18px; padding:28px; border-radius:20px; background:var(--card);
+      box-shadow: 0 10px 25px rgba(14,0,62,.06);
+      display:grid; grid-template-columns:1.2fr .9fr; gap:22px;
+    }
+    @media (max-width:860px){ .hero{grid-template-columns:1fr} }
+    h1{font-size:clamp(26px,4.5vw,44px); line-height:1.15; margin:0 0 10px}
+    .lead{color:var(--muted); margin:0 0 18px}
+    .badge{
+      display:inline-flex; align-items:center; gap:8px; font-weight:600;
+      background:rgba(111,60,195,.1); color:var(--purple); padding:6px 10px;
+      border-radius:999px; margin-bottom:12px
+    }
+    .card{
+      background:var(--card); border-radius:16px; padding:20px;
+      box-shadow: 0 8px 20px rgba(11,2,51,.05);
+    }
+    .label{font-size:13px; color:var(--muted); margin-bottom:6px}
+    input,select,textarea{
+      width:100%; padding:12px 14px; border:1px solid #e5e7ef; border-radius:12px;
+      outline:none; background:#fff; color:var(--text);
+    }
+    input:focus,select:focus,textarea:focus{border-color:var(--purple)}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width:560px){ .row{grid-template-columns:1fr} }
+    .btn{
+      appearance:none; border:0; border-radius:12px; padding:12px 16px;
+      font-weight:700; cursor:pointer; transition:.2s ease; width:100%;
+      color:#fff; background:var(--purple);
+    }
+    .btn:hover{background:var(--purple-600)}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+    .hint{font-size:12px; color:var(--muted); margin-top:8px}
+    .footer{
+      display:flex; gap:10px; align-items:center; justify-content:center;
+      color:var(--muted); font-size:12px; margin:20px 0 0;
+    }
+    .pill{padding:2px 8px; border-radius:999px; background:#eef0f7}
+    /* Toast */
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:22px; min-width:260px; max-width:92vw; padding:12px 14px;
+      border-radius:12px; color:#fff; display:none; align-items:center; gap:10px;
+      box-shadow:0 10px 30px rgba(0,0,0,.15); z-index:9999;
+    }
+    .toast.ok{background:linear-gradient(180deg,var(--ok),#10a191)}
+    .toast.err{background:linear-gradient(180deg,var(--err),#b91c1c)}
+    .toast.show{display:flex; animation:pop .2s ease}
+    @keyframes pop{from{transform:translate(-50%,10px);opacity:.4}to{transform:translate(-50%,0);opacity:1}}
+    /* Small deco */
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--gold);display:inline-block}
   </style>
 </head>
 <body>
-  <h1>👋 Welcome to Trade Haven</h1>
-  <p>Trade, Connect, and Thrive with Pi Across Africa and Beyond 🌍</p>
+  <div class="wrap">
+    <div class="nav">
+      <div class="brand">
+        <div class="logo">π</div>
+        <div>
+          Trade Haven <span class="tag">Testnet</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div>
+        <div class="badge">👋 Welcome to Trade Haven</div>
+        <h1>Trade, Connect, and Thrive with Pi Across Africa &amp; Beyond</h1>
+        <p class="lead">
+          Do a quick <strong>test payment</strong> to confirm your app is wired to the Pi Network SDK.
+        </p>
+
+        <div class="card" aria-label="Payment Form">
+          <div class="row">
+            <div>
+              <div class="label">Amount (π)</div>
+              <input id="amount" type="number" step="0.000001" min="0.000001" value="0.001" />
+            </div>
+            <div>
+              <div class="label">Purpose</div>
+              <select id="purpose">
+                <option value="Test payment">Test payment</option>
+                <option value="Listing boost">Listing boost</option>
+                <option value="Pro vendor check">Pro vendor check</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="label" style="margin-top:12px;">Memo (optional)</div>
+          <input id="memo" type="text" placeholder="e.g., QA check from Paynekilla" />
+
+          <div style="margin-top:16px; display:flex; gap:10px;">
+            <button id="pay-btn" class="btn">⚡ Send Test Payment</button>
+          </div>
+          <div class="hint">You’ll approve this payment in the Pi Browser. No real Pi leaves Testnet.</div>
+        </div>
+
+        <div class="footer">
+          <span class="pill">Privacy friendly</span>
+          <span class="dot"></span>
+          <a class="pill" href="/privacy-policy" style="text-decoration:none;color:inherit">Privacy Policy</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 8px">What this does</h3>
+        <p class="lead" style="margin:0 0 12px">
+          It calls the Pi SDK’s <code>createPayment</code> and sends a tiny
+          Testnet transaction. You’ll see a success/failure toast below.
+        </p>
+        <ul style="margin:0 0 6px; padding-left:20px; color:var(--muted)">
+          <li>Works only inside the Pi Browser</li>
+          <li>Amount is editable — default is <strong>0.001 π</strong></li>
+          <li>Safe for test: no mainnet funds are used</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"><span id="toastText"></span></div>
+
+  <!-- Pi SDK -->
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <script>
+    const Pi = window.Pi;
+
+    const $ = (id)=>document.getElementById(id);
+    const btn = $("pay-btn");
+    const toast = $("toast");
+    const toastText = $("toastText");
+
+    function showToast(msg, ok=true){
+      toast.className = "toast " + (ok ? "ok":"err") + " show";
+      toastText.textContent = msg;
+      setTimeout(()=> toast.classList.remove("show"), 3500);
+    }
+
+    async function pay(){
+      btn.disabled = true; btn.textContent = "Processing…";
+
+      const amount = parseFloat($("amount").value || "0.001");
+      const memo = $("memo").value.trim() || "Trade Haven";
+      const purpose = $("purpose").value;
+
+      try{
+        // In Pi Browser, no explicit init is required.
+        const payment = await Pi.createPayment({
+          amount: amount,
+          memo: `${purpose} — ${memo}`,
+          metadata: { type: "test", purpose }
+        });
+
+        console.log("Payment success:", payment);
+        showToast("Payment successful ✅", true);
+      }catch(err){
+        console.error("Payment failed:", err);
+        showToast("Payment failed. Check logs.", false);
+      }finally{
+        btn.disabled = false; btn.textContent = "⚡ Send Test Payment";
+      }
+    }
+
+    btn.addEventListener("click", pay);
+  </script>
 </body>
 </html>
