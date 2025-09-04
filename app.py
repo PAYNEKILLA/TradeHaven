@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Trade Haven is live! v2"  # Just homepage placeholder
+    return render_template("home.html")  # ✅ serve your real HTML file
 
 @app.route("/privacy-policy")
 def privacy():
