@@ -151,50 +151,97 @@
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="toast"><span id="toastText"></span></div>
-
   <!-- Pi SDK -->
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-  <script>
-    const Pi = window.Pi;
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script>
+  // 1) Init the SDK (Testnet first; switch to sandbox:false for Mainnet)
+  const Pi = window.Pi;
+  Pi.init({ version: "2.0", sandbox: true }); // true = Testnet, false = Mainnet
 
-    const $ = (id)=>document.getElementById(id);
-    const btn = $("pay-btn");
-    const toast = $("toast");
-    const toastText = $("toastText");
+  // 2) Helper: toast + DOM
+  const $ = (id)=>document.getElementById(id);
+  const btn = $("pay-btn");
+  const toast = $("toast");
+  const toastText = $("toastText");
+  function showToast(msg, ok=true){
+    toast.className = "toast " + (ok ? "ok":"err") + " show";
+    toastText.textContent = msg;
+    setTimeout(()=> toast.classList.remove("show"), 3500);
+  }
 
-    function showToast(msg, ok=true){
-      toast.className = "toast " + (ok ? "ok":"err") + " show";
-      toastText.textContent = msg;
-      setTimeout(()=> toast.classList.remove("show"), 3500);
+  // 3) Sign in to Pi (payments scope) on page load
+  async function onIncompletePaymentFound(payment) {
+    // Optional: you can call your server to complete if needed
+    console.log("Found incomplete payment:", payment);
+  }
+
+  let currentUser = null;
+  async function signIn() {
+    try {
+      const scopes = ['payments']; // request payments scope
+      currentUser = await Pi.authenticate(scopes, onIncompletePaymentFound);
+      console.log("Pi user authenticated:", currentUser);
+    } catch (e) {
+      console.error("Auth error:", e);
+      showToast("Pi login failed. Please retry.", false);
     }
+  }
+  window.addEventListener("load", signIn);
 
-    async function pay(){
-      btn.disabled = true; btn.textContent = "Processing…";
+  // 4) Payment flow with **server callbacks**
+  async function pay(){
+    btn.disabled = true; btn.textContent = "Processing…";
 
-      const amount = parseFloat($("amount").value || "0.001");
-      const memo = $("memo").value.trim() || "Trade Haven";
-      const purpose = $("purpose").value;
+    const amount  = parseFloat($("amount").value || "0.001");
+    const memoRaw = $("memo").value.trim() || "Trade Haven";
+    const purpose = $("purpose").value;
+    const memo    = `${purpose} — ${memoRaw}`;
 
-      try{
-        // In Pi Browser, no explicit init is required.
-        const payment = await Pi.createPayment({
-          amount: amount,
-          memo: `${purpose} — ${memo}`,
-          metadata: { type: "test", purpose }
-        });
+    try {
+      const paymentData = {
+        amount,
+        memo,
+        metadata: { type: "test", purpose }
+      };
 
-        console.log("Payment success:", payment);
-        showToast("Payment successful ✅", true);
-      }catch(err){
-        console.error("Payment failed:", err);
-        showToast("Payment failed. Check logs.", false);
-      }finally{
-        btn.disabled = false; btn.textContent = "⚡ Send Test Payment";
-      }
+      // These callbacks notify your Flask backend
+      const callbacks = {
+        onReadyForServerApproval: async (paymentId) => {
+          // Tell server to /approve-payment
+          await fetch("/approve-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentId })
+          });
+        },
+        onReadyForServerCompletion: async (paymentId, txid) => {
+          // Tell server to /complete-payment
+          await fetch("/complete-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentId, txid })
+          });
+        },
+        onCancel: (paymentId) => {
+          console.warn("Payment cancelled:", paymentId);
+          showToast("Payment cancelled.", false);
+        },
+        onError: (error, payment) => {
+          console.error("Payment error:", error, payment);
+          showToast("Payment failed. Check logs.", false);
+        }
+      };
+
+      await Pi.createPayment(paymentData, callbacks);
+      showToast("Payment initiated. Approve in Pi Browser ✅", true);
+
+    } catch (err) {
+      console.error("Payment failed:", err);
+      showToast("Payment failed. Check logs.", false);
+    } finally {
+      btn.disabled = false; btn.textContent = "⚡ Send Test Payment";
     }
+  }
 
-    btn.addEventListener("click", pay);
-  </script>
-</body>
-</html>
+  $("pay-btn").addEventListener("click", pay);
+</script>
